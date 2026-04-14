@@ -98,8 +98,7 @@ services:
     image: matrixdotorg/synapse:latest
     container_name: matrix
     volumes:
-      - ./matrix/data:/data
-      - ./matrix/homeserver.yaml:/data/homeserver.yaml:ro
+      - ./matrix:/data
     networks:
       internal:
         ipv4_address: ${IP_MATRIX:-172.20.0.30}
