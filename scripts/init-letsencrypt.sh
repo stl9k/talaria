@@ -19,10 +19,6 @@ echo "🚀 Starting nginx for ACME challenge..."
 docker compose up -d --no-deps nginx
 sleep 5
 
-# Test nginx is responding
-echo "🔍 Testing nginx ACME endpoint..."
-docker compose exec -T nginx wget -q -O /dev/null http://localhost/.well-known/acme-challenge/test || echo "⚠️  Nginx not responding on port 80"
-
 # Request certificates with timeout
 echo "📜 Requesting certificates from Let's Encrypt..."
 timeout 120 docker compose run --rm certbot certonly \
@@ -33,8 +29,7 @@ timeout 120 docker compose run --rm certbot certonly \
     --no-eff-email \
     --force-renewal \
     -d ${DOMAIN} \
-    --non-interactive \
-    --verbose
+    --non-interactive
 
 if [ $? -eq 0 ]; then
     echo "🔗 Creating symlinks..."
