@@ -29,11 +29,12 @@ config:
 	@mkdir -p matrix/data element
 	@chmod 777 telemt/config
 	@rm -rf matrix/homeserver.yaml element/config.json
-	@envsubst < nginx/stream.conf.d/map.conf.template > nginx/stream.conf.d/map.conf
-	@envsubst < nginx/stream.conf.d/upstreams.conf.template > nginx/stream.conf.d/upstreams.conf
-	@envsubst < telemt/config/telemt.toml.template > telemt/config/telemt.toml
-	@envsubst < matrix/homeserver.yaml.template > matrix/homeserver.yaml
-	@envsubst < element/config.json.template > element/config.json
+	@set -a && source .env && set +a && \
+	envsubst < nginx/stream.conf.d/map.conf.template > nginx/stream.conf.d/map.conf && \
+	envsubst < nginx/stream.conf.d/upstreams.conf.template > nginx/stream.conf.d/upstreams.conf && \
+	envsubst < telemt/config/telemt.toml.template > telemt/config/telemt.toml && \
+	envsubst < matrix/homeserver.yaml.template > matrix/homeserver.yaml && \
+	envsubst < element/config.json.template > element/config.json
 	@chmod 666 telemt/config/telemt.toml
 	@echo "✅ Configs generated!"
 
