@@ -28,7 +28,7 @@ echo "   ✅ Configs generated"
 # Start services
 echo ""
 echo "2️⃣ Starting containers..."
-docker-compose up -d
+docker compose up -d
 
 # Wait for services
 echo ""
@@ -38,7 +38,7 @@ sleep 5
 # Check status
 echo ""
 echo "4️⃣ Service status:"
-docker-compose ps
+docker compose ps
 
 echo ""
 echo "════════════════════════════════════════════════════════════════"

@@ -41,7 +41,7 @@ deploy:
 	@chmod +x scripts/*.sh 2>/dev/null || true
 	@make config
 	@echo "🚀 Starting containers..."
-	@docker-compose up -d
+	@docker compose up -d
 	@echo "⏳ Waiting for startup..."
 	@sleep 5
 	@make status
@@ -62,24 +62,24 @@ certs:
 	@./scripts/init-letsencrypt.sh
 
 status:
-	@docker-compose ps
+	@docker compose ps
 
 logs:
-	@docker-compose logs -f --tail=50
+	@docker compose logs -f --tail=50
 
 reload:
 	@docker exec nginx-router nginx -s reload
 	@echo "✅ Nginx reloaded"
 
 restart:
-	@docker-compose restart
+	@docker compose restart
 	@echo "✅ Services restarted"
 
 down:
-	@docker-compose down
+	@docker compose down
 
 clean:
-	@docker-compose down -v
+	@docker compose down -v
 	@rm -f nginx/stream.conf.d/*.conf
 	@rm -f telemt/config/telemt.toml
 	@rm -rf 3x-ui/db/*
