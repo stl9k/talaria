@@ -1,0 +1,34 @@
+# Environment
+.env
+
+# SSL certificates
+nginx/ssl/*
+certbot/conf/*
+certbot/www/*
+
+# Generated configs
+nginx/stream.conf.d/*.conf
+telemt/config.toml
+
+# Data & databases
+3x-ui/db/*
+matrix/data/*
+*.db
+*.sqlite
+
+# Logs
+*.log
+
+# Docker
+docker-compose.override.yml
+
+# OS junk
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Backup files
+*.backup
+*.bak
+*.old
