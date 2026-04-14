@@ -1,0 +1,11 @@
+# Upstream definitions
+
+# ALPN-based routing for main domain
+upstream main_domain {
+    server 127.0.0.1:8443;
+}
+
+# Xray core (default fallback)
+upstream xui {
+    server ${IP_3XUI}:443;
+}

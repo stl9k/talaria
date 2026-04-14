@@ -1,0 +1,7 @@
+# SNI routing map
+
+# Main domain -> ALPN-based routing (Matrix/Element, Telemt, 3X-UI)
+"${DOMAIN}" main_domain;
+
+# Everything else -> Xray
+default xui;
