@@ -1,0 +1,126 @@
+networks:
+  internal:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: ${INTERNAL_SUBNET:-172.20.0.0/16}
+
+services:
+  nginx:
+    image: nginx:alpine
+    container_name: nginx-router
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/stream.conf.d:/etc/nginx/stream.conf.d:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./certbot/www:/var/www/certbot:ro
+    networks:
+      internal:
+        ipv4_address: ${IP_NGINX:-172.20.0.2}
+    depends_on:
+      - xui
+      - telemt
+      - matrix
+      - element
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ:-UTC}
+
+  certbot:
+    image: certbot/certbot:latest
+    container_name: certbot
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+      - ./nginx/ssl:/etc/nginx/ssl
+      - ./scripts:/scripts:ro
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot --quiet --post-hook \"/scripts/renew-certs.sh\"; sleep 12h; done'"
+    networks:
+      - internal
+    restart: unless-stopped
+
+  xui:
+    image: ghcr.io/mhsanaei/3x-ui:latest
+    container_name: 3x-ui
+    volumes:
+      - ./3x-ui/db:/etc/x-ui
+      - ./3x-ui/cert:/root/cert
+    networks:
+      internal:
+        ipv4_address: ${IP_3XUI:-172.20.0.10}
+    expose:
+      - "${XUI_PORT:-2053}"
+    environment:
+      - TZ=${TZ:-UTC}
+      - XRAY_VMESS_AEAD_FORCED=false
+    restart: unless-stopped
+
+  telemt:
+    image: whn0thacked/telemt-docker:latest
+    container_name: telemt
+    user: "root"
+    environment:
+      - RUST_LOG=info
+    command: ["/etc/telemt/telemt.toml"]
+    volumes:
+      - ./telemt/config:/etc/telemt
+      - ./certbot/conf/live/${DOMAIN}/fullchain.pem:/etc/telemt/fullchain.pem:ro
+      - ./certbot/conf/live/${DOMAIN}/privkey.pem:/etc/telemt/privkey.pem:ro
+    networks:
+      internal:
+        ipv4_address: ${IP_TELEMT:-172.20.0.20}
+    expose:
+      - "${TELEMT_PORT:-8443}"
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+    read_only: true
+    tmpfs:
+      - /tmp:rw,nosuid,nodev,noexec,size=16m
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  matrix:
+    image: matrixdotorg/synapse:latest
+    container_name: matrix
+    volumes:
+      - ./matrix/data:/data
+      - ./matrix/homeserver.yaml:/data/homeserver.yaml:ro
+    networks:
+      internal:
+        ipv4_address: ${IP_MATRIX:-172.20.0.30}
+    expose:
+      - "${MATRIX_PORT:-8008}"
+    environment:
+      - TZ=${TZ:-UTC}
+      - SYNAPSE_SERVER_NAME=${DOMAIN}
+      - SYNAPSE_REPORT_STATS=no
+    restart: unless-stopped
+
+  element:
+    image: vectorim/element-web:latest
+    container_name: element
+    volumes:
+      - ./element/config.json:/app/config.json:ro
+    networks:
+      internal:
+        ipv4_address: ${IP_ELEMENT:-172.20.0.31}
+    expose:
+      - "${ELEMENT_PORT:-80}"
+    environment:
+      - TZ=${TZ:-UTC}
+    restart: unless-stopped
