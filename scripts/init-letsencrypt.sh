@@ -15,12 +15,12 @@ mkdir -p certbot/conf certbot/www nginx/ssl
 
 # Start nginx for ACME challenge
 echo "🚀 Starting nginx for ACME challenge..."
-docker-compose up -d nginx
+docker compose up -d nginx
 sleep 5
 
 # Request certificates
 echo "📜 Requesting certificates from Let's Encrypt..."
-docker-compose run --rm certbot certonly \
+docker compose run --rm certbot certonly \
     --webroot \
     --webroot-path=/var/www/certbot \
     --email ${LETSENCRYPT_EMAIL} \
@@ -40,7 +40,7 @@ cp certbot/conf/live/${DOMAIN}/privkey.pem 3x-ui/cert/
 
 # Restart services to apply certificates
 echo "🔄 Restarting services..."
-docker-compose restart nginx xui telemt
+docker compose restart nginx xui telemt
 
 echo ""
 echo "✅ Certificates installed successfully!"
