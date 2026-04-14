@@ -29,7 +29,6 @@ docker compose run --rm certbot certonly \
     --no-eff-email \
     --force-renewal \
     --non-interactive \
-    --quiet \
     -d ${DOMAIN}
 
 echo "🔗 Creating symlinks..."
