@@ -1,0 +1,22 @@
+{
+  "default_server_config": {
+    "m.homeserver": {
+      "base_url": "https://${DOMAIN}",
+      "server_name": "${DOMAIN}"
+    }
+  },
+  "brand": "Element",
+  "disable_guests": true,
+  "disable_login_language_selector": false,
+  "disable_3pid_login": false,
+  "room_directory": {
+    "servers": ["${DOMAIN}"]
+  },
+  "enable_welcome": false,
+  "default_theme": "light",
+  "show_labs_settings": false,
+  "features": {
+    "feature_video_rooms": true,
+    "feature_element_call_video_rooms": true
+  }
+}
