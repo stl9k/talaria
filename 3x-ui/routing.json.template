@@ -1,0 +1,40 @@
+{
+  "routing": {
+    "domainStrategy": "IPIfNonMatch",
+    "rules": [
+      {
+        "type": "field",
+        "inboundTag": ["api"],
+        "outboundTag": "api"
+      },
+      {
+        "type": "field",
+        "ip": ["geoip:private"],
+        "outboundTag": "blocked"
+      },
+      {
+        "type": "field",
+        "protocol": ["bittorrent"],
+        "outboundTag": "blocked"
+      },
+      {
+        "type": "field",
+        "domain": [
+          "domain:ru",
+          "domain:su",
+          "domain:xn--p1ai",
+          "domain:vk.com",
+          "domain:boosty.to",
+          "geosite:category-gov-ru",
+          "regexp:.*\\.xn--p1ai$"
+        ],
+        "outboundTag": "blocked"
+      },
+      {
+        "type": "field",
+        "ip": ["geoip:ru"],
+        "outboundTag": "blocked"
+      }
+    ]
+  }
+}
