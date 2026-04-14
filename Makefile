@@ -28,6 +28,7 @@ config:
 	@mkdir -p telemt/config certbot/conf certbot/www
 	@mkdir -p matrix/data element
 	@chmod 777 telemt/config
+	@rm -f matrix/homeserver.yaml element/config.json
 	@envsubst < nginx/stream.conf.d/map.conf.template > nginx/stream.conf.d/map.conf
 	@envsubst < nginx/stream.conf.d/upstreams.conf.template > nginx/stream.conf.d/upstreams.conf
 	@envsubst < telemt/config/telemt.toml.template > telemt/config/telemt.toml
