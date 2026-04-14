@@ -1,0 +1,39 @@
+server_name: "${DOMAIN}"
+pid_file: /data/homeserver.pid
+
+listeners:
+  - port: ${MATRIX_PORT}
+    bind_addresses: ['${IP_MATRIX}']
+    type: http
+    tls: false
+    x_forwarded: true
+    resources:
+      - names: [client, federation]
+        compress: false
+
+database:
+  name: sqlite3
+  args:
+    database: /data/homeserver.db
+
+log_config: "/data/log.yaml"
+
+media_store_path: "/data/media_store"
+
+registration_shared_secret: "${MATRIX_REGISTRATION_SECRET}"
+
+report_stats: false
+
+macaroon_secret_key: "${MATRIX_REGISTRATION_SECRET}"
+
+form_secret: "${MATRIX_REGISTRATION_SECRET}"
+
+signing_key_path: "/data/server.signing.key"
+
+trusted_key_servers: []
+
+enable_registration: false
+
+enable_metrics: false
+
+suppress_key_server_warning: true
