@@ -32,6 +32,7 @@ config:
 	@. ./.env && \
 	sed "s|\$${DOMAIN}|$${DOMAIN}|g; s|\$${XUI_PATH}|$${XUI_PATH}|g" nginx/stream.conf.d/map.conf.template > nginx/stream.conf.d/map.conf && \
 	sed "s|\$${IP_3XUI}|$${IP_3XUI}|g" nginx/stream.conf.d/upstreams.conf.template > nginx/stream.conf.d/upstreams.conf && \
+	sed "s|\$${DOMAIN}|$${DOMAIN}|g; s|\$${IP_MATRIX}|$${IP_MATRIX}|g; s|\$${MATRIX_PORT}|$${MATRIX_PORT}|g; s|\$${IP_ELEMENT}|$${IP_ELEMENT}|g; s|\$${ELEMENT_PORT}|$${ELEMENT_PORT}|g; s|\$${IP_3XUI}|$${IP_3XUI}|g; s|\$${XUI_PORT}|$${XUI_PORT}|g; s|\$${XUI_PATH}|$${XUI_PATH}|g" nginx/nginx.conf.template > nginx/nginx.conf && \
 	sed "s|\$${TELEMT_PORT}|$${TELEMT_PORT}|g; s|\$${TELEMT_SECRET}|$${TELEMT_SECRET}|g; s|\$${DOMAIN}|$${DOMAIN}|g; s|\$${TELEMT_AD_TAG}|$${TELEMT_AD_TAG}|g" telemt/config/telemt.toml.template > telemt/config/telemt.toml && \
 	sed "s|\$${DOMAIN}|$${DOMAIN}|g; s|\$${MATRIX_PORT}|$${MATRIX_PORT}|g; s|\$${MATRIX_REGISTRATION_SECRET}|$${MATRIX_REGISTRATION_SECRET}|g; s|\$${IP_MATRIX}|$${IP_MATRIX}|g" matrix/homeserver.yaml.template > matrix/homeserver.yaml && \
 	sed "s|\$${DOMAIN}|$${DOMAIN}|g" element/config.json.template > element/config.json
