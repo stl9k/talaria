@@ -15,6 +15,7 @@ telemt/config.toml
 matrix/data/*
 *.db
 *.sqlite
+nginx/nginx.conf
 
 # Logs
 *.log
