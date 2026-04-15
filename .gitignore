@@ -16,6 +16,9 @@ matrix/data/*
 *.db
 *.sqlite
 nginx/nginx.conf
+telemt/telemt.toml
+matrix/homeserver.yaml
+element/config.json
 
 # Logs
 *.log
