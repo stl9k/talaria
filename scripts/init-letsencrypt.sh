@@ -29,7 +29,7 @@ http {
 EOF
 
 # Backup main config and use temp config
-mv nginx/nginx.conf nginx/nginx.conf.bak
+cp nginx/nginx.conf nginx/nginx.conf.bak
 cp nginx/nginx-certbot.conf nginx/nginx.conf
 
 # Start nginx for ACME challenge
@@ -50,9 +50,15 @@ docker run --rm \
     --email ${LETSENCRYPT_EMAIL} \
     --agree-tos \
     --no-eff-email \
-    --force-renewal \
     --non-interactive \
     -d ${DOMAIN}
+
+# Verify certificate files were created properly
+if [ ! -f "certbot/conf/live/${DOMAIN}/fullchain.pem" ]; then
+    echo "❌ Certificate file not created properly. Cleaning up..."
+    rm -rf "certbot/conf/live/${DOMAIN}" 2>/dev/null || true
+    exit 1
+fi
 
 # Restore main config
 echo "🔄 Restoring main nginx config..."
@@ -60,6 +66,7 @@ mv nginx/nginx.conf.bak nginx/nginx.conf
 
 # Create symlink for nginx
 echo "🔗 Creating symlinks..."
+mkdir -p nginx/ssl
 ln -sf ../certbot/conf/live/${DOMAIN} nginx/ssl/live
 
 # Copy certificates for 3X-UI and Telemt
