@@ -28,6 +28,7 @@ config:
 	@mkdir -p telemt/config certbot/conf certbot/www
 	@mkdir -p matrix/data element
 	@chmod 777 telemt/config
+	@chmod 777 matrix/data
 	@rm -rf matrix/homeserver.yaml element/config.json
 	@. ./.env && \
 	sed "s|\$${DOMAIN}|$${DOMAIN}|g; s|\$${XUI_PATH}|$${XUI_PATH}|g" nginx/stream.conf.d/map.conf.template > nginx/stream.conf.d/map.conf && \
