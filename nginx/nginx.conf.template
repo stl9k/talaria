@@ -1,0 +1,149 @@
+user nginx;
+worker_processes auto;
+pid /var/run/nginx.pid;
+
+events {
+    worker_connections 4096;
+    use epoll;
+    multi_accept on;
+}
+
+# SNI ROUTING (Port 443)
+
+stream {
+    log_format stream '$remote_addr [$time_local] $protocol $status '
+                      '"$ssl_preread_server_name" -> $upstream_addr '
+                      '($bytes_sent/$bytes_received) $session_time';
+    
+    access_log /var/log/nginx/stream.log stream;
+    error_log  /var/log/nginx/stream-error.log warn;
+
+    # Route by SNI
+    map $ssl_preread_server_name $backend {
+        include /etc/nginx/stream.conf.d/map.conf;
+    }
+
+    include /etc/nginx/stream.conf.d/upstreams.conf;
+
+    server {
+        listen 443;
+        listen [::]:443;
+        
+        ssl_preread on;
+        proxy_pass $backend;
+        proxy_protocol off;
+        
+        proxy_connect_timeout 10s;
+        proxy_timeout 300s;
+        proxy_buffer_size 16k;
+    }
+}
+
+# HTTP BLOCK — CERTBOT + MATRIX + ELEMENT (Ports 80, 8443)
+
+http {
+    include /etc/nginx/mime.types;
+    default_type application/octet-stream;
+
+    sendfile on;
+    tcp_nopush on;
+    keepalive_timeout 65;
+    server_tokens off;
+    client_max_body_size 50M;  # For Matrix file uploads
+    
+    access_log /var/log/nginx/access.log;
+    error_log /var/log/nginx/error.log warn;
+
+    # Port 80: Certbot + Redirect to HTTPS
+    server {
+        listen 80;
+        listen [::]:80;
+        server_name _;
+        
+        # Let's Encrypt ACME challenge
+        location ^~ /.well-known/acme-challenge/ {
+            root /var/www/certbot;
+            default_type text/plain;
+        }
+        
+        # Matrix federation discovery
+        location ^~ /.well-known/matrix/ {
+            proxy_pass http://${IP_MATRIX}:${MATRIX_PORT}/.well-known/matrix/;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+        }
+        
+        # Redirect everything else to HTTPS
+        location / {
+            return 301 https://${MAIN}$request_uri;
+        }
+    }
+
+    # Port 8443 (internal): Matrix + Element with TLS
+    server {
+        listen 8443 ssl http2;
+        listen [::]:8443 ssl http2;
+        server_name ${DOMAIN};
+        
+        # SSL certificates
+        ssl_certificate /etc/nginx/ssl/live/${DOMAIN}/fullchain.pem;
+        ssl_certificate_key /etc/nginx/ssl/live/${DOMAIN}/privkey.pem;
+        
+        # SSL configuration
+        ssl_protocols TLSv1.2 TLSv1.3;
+        ssl_ciphers HIGH:!aNULL:!MD5;
+        ssl_prefer_server_ciphers on;
+        ssl_session_cache shared:SSL:10m;
+        ssl_session_timeout 10m;
+        
+        # Security headers
+        add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header X-Frame-Options "SAMEORIGIN" always;
+        
+        # 3X-UI admin panel
+        location /${XUI_PATH}/ {
+            proxy_pass http://${IP_3XUI}:${XUI_PORT}/;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+        
+        # Matrix Synapse API
+        location ~ ^(/_matrix|/_synapse/client) {
+            proxy_pass http://${IP_MATRIX}:${MATRIX_PORT};
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            
+            proxy_read_timeout 600s;
+            proxy_connect_timeout 60s;
+            proxy_send_timeout 600s;
+            
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "upgrade";
+        }
+        
+        # Matrix Federation
+        location ~ ^/_matrix/federation {
+            proxy_pass http://${IP_MATRIX}:${MATRIX_PORT};
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            
+            proxy_read_timeout 60s;
+        }
+        
+        # Element Web client
+        location / {
+            proxy_pass http://${IP_ELEMENT}:${ELEMENT_PORT};
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+    }
+}
