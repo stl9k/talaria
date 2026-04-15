@@ -19,6 +19,8 @@ nginx/nginx.conf
 telemt/telemt.toml
 matrix/homeserver.yaml
 element/config.json
+nginx/nginx-certbot.conf
+nginx/nginx.conf.bak
 
 # Logs
 *.log
