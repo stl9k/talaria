@@ -29,12 +29,12 @@ config:
 	@mkdir -p matrix/data element
 	@chmod 777 telemt/config
 	@rm -rf matrix/homeserver.yaml element/config.json
-	@set -a && source .env && set +a && \
-	envsubst < nginx/stream.conf.d/map.conf.template > nginx/stream.conf.d/map.conf && \
-	envsubst < nginx/stream.conf.d/upstreams.conf.template > nginx/stream.conf.d/upstreams.conf && \
-	envsubst < telemt/config/telemt.toml.template > telemt/config/telemt.toml && \
-	envsubst < matrix/homeserver.yaml.template > matrix/homeserver.yaml && \
-	envsubst < element/config.json.template > element/config.json
+	@. ./.env && \
+	sed "s|\$${DOMAIN}|$${DOMAIN}|g; s|\$${XUI_PATH}|$${XUI_PATH}|g" nginx/stream.conf.d/map.conf.template > nginx/stream.conf.d/map.conf && \
+	sed "s|\$${IP_3XUI}|$${IP_3XUI}|g" nginx/stream.conf.d/upstreams.conf.template > nginx/stream.conf.d/upstreams.conf && \
+	sed "s|\$${TELEMT_PORT}|$${TELEMT_PORT}|g; s|\$${TELEMT_SECRET}|$${TELEMT_SECRET}|g; s|\$${DOMAIN}|$${DOMAIN}|g; s|\$${TELEMT_AD_TAG}|$${TELEMT_AD_TAG}|g" telemt/config/telemt.toml.template > telemt/config/telemt.toml && \
+	sed "s|\$${DOMAIN}|$${DOMAIN}|g; s|\$${MATRIX_PORT}|$${MATRIX_PORT}|g; s|\$${MATRIX_REGISTRATION_SECRET}|$${MATRIX_REGISTRATION_SECRET}|g; s|\$${IP_MATRIX}|$${IP_MATRIX}|g" matrix/homeserver.yaml.template > matrix/homeserver.yaml && \
+	sed "s|\$${DOMAIN}|$${DOMAIN}|g" element/config.json.template > element/config.json
 	@chmod 666 telemt/config/telemt.toml
 	@echo "✅ Configs generated!"
 
@@ -49,14 +49,14 @@ deploy:
 	@echo ""
 	@echo "✅ Deployment complete!"
 	@echo ""
-	@echo "📊 3X-UI Panel: https://${DOMAIN}/xui/"
-	@echo "   Login: ${XUI_USERNAME}"
-	@echo "   Password: ${XUI_PASSWORD}"
+	@. ./.env && echo "📊 3X-UI Panel: https://$${DOMAIN}/$${XUI_PATH}/"
+	@. ./.env && echo "   Login: $${XUI_USERNAME}"
+	@. ./.env && echo "   Password: $${XUI_PASSWORD}"
 	@echo ""
-	@echo "💬 Matrix/Element: https://${DOMAIN}/"
+	@. ./.env && echo "💬 Matrix/Element: https://$${DOMAIN}/"
 	@echo ""
-	@echo "🔐 MTProto Proxy: ${DOMAIN}:443"
-	@echo "   Secret: ${TELEMT_SECRET}"
+	@. ./.env && echo "🔐 MTProto Proxy: $${DOMAIN}:443"
+	@. ./.env && echo "   Secret: $${TELEMT_SECRET}"
 
 certs:
 	@chmod +x scripts/*.sh 2>/dev/null || true
@@ -83,6 +83,7 @@ clean:
 	@docker compose down -v
 	@rm -f nginx/stream.conf.d/*.conf
 	@rm -f telemt/config/telemt.toml
+	@rm -rf matrix/homeserver.yaml element/config.json
 	@rm -rf 3x-ui/db/*
 	@rm -rf certbot/conf/*
 	@rm -rf matrix/data/*
